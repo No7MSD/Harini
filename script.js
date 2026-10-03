@@ -1,3 +1,11 @@
+const GOOGLE_SCRIPT_URL =
+    "https://script.google.com/macros/s/AKfycbyugfcugUofl8r2K6vg6OfbMCclbwbPeveeCNVeoq2ExjRLYw6zGIizXpN_sYfDFuRV/exec";
+
+const sessionId =
+    crypto.randomUUID();
+
+const attemptCounts = {};
+
 const questions = [
 
     {
@@ -103,12 +111,6 @@ const questions = [
     },
 
     {
-        question: "Na unna vida better friend unakku irukka?",
-        yes: "Avanga yaarunu sollu… avangalukku oru small interview vechikalam 😌",
-        no: "Correct. Unakku vera option-e illa 😂"
-    },
-
-    {
         question: "Na unakku advice kudukradhu useful-ah irukka?",
         yes: "Finally! En advice-ku value vandhuduchu 😎",
         no: "Appo naan ivlo naal pesinadhellam wall kitta pesinadha? 😂"
@@ -140,8 +142,8 @@ const questions = [
 
     {
         question: "Na unakku gift kudutha happy aaguviya?",
-        yes: "Gift ready… aana expectations romba perusa vechikadha 😂",
-        no: "Appo gift-um save, money-um save. Thank you 😂"
+        yes: "Gift ready… aana expectations romba perusa vechikadha 😂oru naal gift thedi varum",
+        no: "Appo unna happy aakura alavuku oru gift varum, ready ah iru😂"
     },
 
     {
@@ -151,6 +153,36 @@ const questions = [
     }
 
 ];
+function recordAnswer(option) {
+
+    const current = questions[currentQuestion];
+
+    // Create attempt count for this question
+    if (!attemptCounts[currentQuestion]) {
+        attemptCounts[currentQuestion] = 0;
+    }
+
+    attemptCounts[currentQuestion]++;
+
+    const attempt = attemptCounts[currentQuestion];
+
+    const data = new URLSearchParams();
+
+    data.append("sessionId", sessionId);
+    data.append("questionNo", currentQuestion + 1);
+    data.append("question", current.question);
+    data.append("selectedOption", option);
+    data.append("attempt", attempt);
+
+    fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        body: data,
+        mode: "no-cors"
+    })
+    .catch(error => {
+        console.log("Unable to save answer:", error);
+    });
+}
 
 
 let currentQuestion = 0;
@@ -201,6 +233,8 @@ yesButton.addEventListener("click", function () {
 
     answerElement.innerText = current.yes;
 
+    recordAnswer("YES");
+
 });
 
 
@@ -211,8 +245,9 @@ noButton.addEventListener("click", function () {
 
     answerElement.innerText = current.no;
 
-});
+    recordAnswer("NO");
 
+});
 
 // NEXT button
 nextButton.addEventListener("click", function () {
